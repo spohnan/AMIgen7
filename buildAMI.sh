@@ -13,7 +13,6 @@ scripts/DiskSetup.sh -b /boot -v VolGroup00 -d $VOLUME
 scripts/MkChrootTree.sh $VOLUME
 scripts/MkTabs.sh $VOLUME
 scripts/ChrootBuild.sh
-scripts/AWScliSetup.sh
 scripts/ChrootCfg.sh
 scripts/GrubSetup.sh $VOLUME
 scripts/NetSet.sh
