@@ -1,3 +1,4 @@
+ami-02e98f78
 
 ```
 #cloud-config
