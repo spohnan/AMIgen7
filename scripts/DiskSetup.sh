@@ -80,12 +80,12 @@ function CarveLVM() {
   systemctl stop boot.mount
 
    # Create filesystems
-   mkfs -t xfs -L "${BOOTLABEL}" "${CHROOTDEV}1" || err_exit "Failure creating filesystem - /boot"
-   mkfs -t xfs "/dev/${VGNAME}/${ROOTVOL[0]}" || err_exit "Failure creating filesystem - /"
-   mkfs -t xfs "/dev/${VGNAME}/${HOMEVOL[0]}" || err_exit "Failure creating filesystem - /home"
-   mkfs -t xfs "/dev/${VGNAME}/${VARVOL[0]}" || err_exit "Failure creating filesystem - /var"
-   mkfs -t xfs "/dev/${VGNAME}/${LOGVOL[0]}" || err_exit "Failure creating filesystem - /var/log"
-   mkfs -t xfs "/dev/${VGNAME}/${AUDVOL[0]}" || err_exit "Failure creating filesystem - /var/log/audit"
+   mkfs -t xfs -L "${BOOTLABEL}" "${CHROOTDEV}1" -f || err_exit "Failure creating filesystem - /boot"
+   mkfs -t xfs "/dev/${VGNAME}/${ROOTVOL[0]}" -f || err_exit "Failure creating filesystem - /"
+   mkfs -t xfs "/dev/${VGNAME}/${HOMEVOL[0]}" -f || err_exit "Failure creating filesystem - /home"
+   mkfs -t xfs "/dev/${VGNAME}/${VARVOL[0]}" -f || err_exit "Failure creating filesystem - /var"
+   mkfs -t xfs "/dev/${VGNAME}/${LOGVOL[0]}" -f || err_exit "Failure creating filesystem - /var/log"
+   mkfs -t xfs "/dev/${VGNAME}/${AUDVOL[0]}" -f || err_exit "Failure creating filesystem - /var/log/audit"
    mkswap "/dev/${VGNAME}/${SWAPVOL[0]}"
 
    if [[ $(xfs_admin -L "${CHROOTDEV}1") != ${BOOTLABEL} ]]
