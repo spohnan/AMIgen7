@@ -7,7 +7,6 @@
 CHROOT=${CHROOT:-/mnt/ec2-root}
 CLOUDCFG="$CHROOT/etc/cloud/cloud.cfg"
 JRNLCNF="$CHROOT/etc/systemd/journald.conf"
-MAINTUSR="maintuser"
 
 # Disable EPEL repos
 chroot "${CHROOT}" yum-config-manager --disable "*epel*" > /dev/null
@@ -38,32 +37,3 @@ fi
 # Set TZ to UTC
 rm "${CHROOT}/etc/localtime"
 cp "${CHROOT}/usr/share/zoneinfo/UTC" "${CHROOT}/etc/localtime"
-
-# Create maintuser
-CLINITUSR=$(grep -E "name: (maintuser|centos|ec2-user|cloud-user)" \
-            "${CLOUDCFG}" | awk '{print $2}')
-
-if [ "${CLINITUSR}" = "" ]
-then
-   echo "Cannot reset value of cloud-init default-user" > /dev/stderr
-else
-   echo "Setting default cloud-init user to ${MAINTUSR}"
-sed -i '/^system_info/,/^  ssh_svcname/d' "${CLOUDCFG}"
-# shellcheck disable=SC1004
-sed -i '/syntax=yaml/i\
-system_info:\
-  default_user:\
-    name: maintuser\
-    lock_passwd: true\
-    gecos: Local Maintenance User\
-    groups: [wheel, adm]\
-    sudo: ["ALL=(root) NOPASSWD:ALL"]\
-    shell: /bin/bash\
-  distro: rhel\
-  paths:\
-    cloud_dir: /var/lib/cloud\
-    templates_dir: /etc/cloud/templates\
-  ssh_svcname: sshd\
-' "${CLOUDCFG}"
-fi
-

@@ -46,8 +46,8 @@ function CarveLVM() {
    dd if=/dev/zero of="${CHROOTDEV}" bs=512 count=1000 > /dev/null 2>&1
 
    # Lay down the base partitions
-   parted -s "${CHROOTDEV}" -- mklabel msdos mkpart primary ext4 2048s ${BOOTDEVSZ} \
-      mkpart primary ext4 ${BOOTDEVSZ} 100% set 2 lvm
+   parted -s "${CHROOTDEV}" -- mklabel msdos mkpart primary xfs 2048s ${BOOTDEVSZ} \
+      mkpart primary xfs ${BOOTDEVSZ} 100% set 2 lvm
 
    # Stop/umount boot device, in case parted/udev/systemd managed to remount it
   systemctl stop boot.mount
@@ -81,12 +81,12 @@ function CarveLVM() {
   systemctl stop boot.mount
 
    # Create filesystems
-   mkfs -t ext4 -L "${BOOTLABEL}" "${CHROOTDEV}1" || err_exit "Failure creating filesystem - /boot"
-   mkfs -t ext4 "/dev/${VGNAME}/${ROOTVOL[0]}" || err_exit "Failure creating filesystem - /"
-   mkfs -t ext4 "/dev/${VGNAME}/${HOMEVOL[0]}" || err_exit "Failure creating filesystem - /home"
-   mkfs -t ext4 "/dev/${VGNAME}/${VARVOL[0]}" || err_exit "Failure creating filesystem - /var"
-   mkfs -t ext4 "/dev/${VGNAME}/${LOGVOL[0]}" || err_exit "Failure creating filesystem - /var/log"
-   mkfs -t ext4 "/dev/${VGNAME}/${AUDVOL[0]}" || err_exit "Failure creating filesystem - /var/log/audit"
+   mkfs -t xfs -L "${BOOTLABEL}" "${CHROOTDEV}1" || err_exit "Failure creating filesystem - /boot"
+   mkfs -t xfs "/dev/${VGNAME}/${ROOTVOL[0]}" || err_exit "Failure creating filesystem - /"
+   mkfs -t xfs "/dev/${VGNAME}/${HOMEVOL[0]}" || err_exit "Failure creating filesystem - /home"
+   mkfs -t xfs "/dev/${VGNAME}/${VARVOL[0]}" || err_exit "Failure creating filesystem - /var"
+   mkfs -t xfs "/dev/${VGNAME}/${LOGVOL[0]}" || err_exit "Failure creating filesystem - /var/log"
+   mkfs -t xfs "/dev/${VGNAME}/${AUDVOL[0]}" || err_exit "Failure creating filesystem - /var/log/audit"
    mkswap "/dev/${VGNAME}/${SWAPVOL[0]}"
 
    # shellcheck disable=SC2053
@@ -103,12 +103,12 @@ function CarveBare() {
    dd if=/dev/zero of="${CHROOTDEV}" bs=512 count=1000 > /dev/null 2>&1
 
    # Lay down the base partitions
-   parted -s "${CHROOTDEV}" -- mklabel msdos mkpart primary ext4 2048s "${BOOTDEVSZ}" \
-      mkpart primary ext4 ${BOOTDEVSZ} 100%
+   parted -s "${CHROOTDEV}" -- mklabel msdos mkpart primary xfs 2048s "${BOOTDEVSZ}" \
+      mkpart primary xfs ${BOOTDEVSZ} 100%
 
    # Create FS on partitions
-   mkfs -t ext4 -L "${BOOTLABEL}" "${CHROOTDEV}1"
-   mkfs -t ext4 -L "${ROOTLABEL}" "${CHROOTDEV}2"
+   mkfs -t xfs -L "${BOOTLABEL}" "${CHROOTDEV}1"
+   mkfs -t xfs -L "${ROOTLABEL}" "${CHROOTDEV}2"
 }
 
 
