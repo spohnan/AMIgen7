@@ -5,7 +5,6 @@ if [ -z $VOLUME ]; then
     VOLUME=/dev/xvdb
 fi
 
-yum -y update
 yum -y install coreutils device-mapper device-mapper-event device-mapper-event-libs device-mapper-libs \
     device-mapper-persistent-data e2fsprogs gawk git grep grub grub2 grub2-tools grubby libudev lvm2 \
     lvm2-libs openssl parted sed sysvinit-tools unzip util-linux-ng yum-utils zip
@@ -20,5 +19,3 @@ scripts/GrubSetup.sh $VOLUME
 scripts/NetSet.sh
 scripts/CleanChroot.sh
 scripts/PreRelabel.sh
-scripts/Umount.sh
-
