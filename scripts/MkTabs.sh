@@ -59,7 +59,7 @@ do
          fi
          ;;
       xfs)
-         echo POINK
+         # echo POINK
          ;;
    esac
    printf "%s\t%s\t%s\tdefaults\t0 0\n" "${BLKDEV}" "${MNTPNT}" "${FSTYPE}"
