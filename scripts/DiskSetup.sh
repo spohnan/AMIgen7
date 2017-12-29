@@ -88,9 +88,9 @@ function CarveLVM() {
    mkfs -t xfs "/dev/${VGNAME}/${AUDVOL[0]}" || err_exit "Failure creating filesystem - /var/log/audit"
    mkswap "/dev/${VGNAME}/${SWAPVOL[0]}"
 
-   if [[ $(e2label "${CHROOTDEV}1") != ${BOOTLABEL} ]]
+   if [[ $(xfs_admin -L "${CHROOTDEV}1") != ${BOOTLABEL} ]]
    then
-      e2label "${CHROOTDEV}1" "${BOOTLABEL}" || \
+      xfs_admin -L "${CHROOTDEV}1" "${BOOTLABEL}" || \
          err_exit "Failed to apply desired label to ${CHROOTDEV}1"
    fi
 }
