@@ -35,12 +35,12 @@ function LogBrk() {
 
 # Partition as LVM
 function CarveLVM() {
-   local ROOTVOL=(rootVol 4g)
+   local ROOTVOL=(rootVol 100%FREE)
    local SWAPVOL=(swapVol 2g)
    local HOMEVOL=(homeVol 1g)
    local VARVOL=(varVol 2g)
    local LOGVOL=(logVol 2g)
-   local AUDVOL=(auditVol 100%FREE)
+   local AUDVOL=(auditVol 1g)
 
    # Clear the MBR and partition table
    dd if=/dev/zero of="${CHROOTDEV}" bs=512 count=1000 > /dev/null 2>&1
@@ -69,7 +69,6 @@ function CarveLVM() {
 
    # Gather info to diagnose seeming /boot race condition
    grep "${BOOTLABEL}" /proc/mounts
-   # shellcheck disable=SC2181
    if [[ $? -eq 0 ]]
    then
      tail -n 100 /var/log/messages
@@ -89,7 +88,6 @@ function CarveLVM() {
    mkfs -t xfs "/dev/${VGNAME}/${AUDVOL[0]}" || err_exit "Failure creating filesystem - /var/log/audit"
    mkswap "/dev/${VGNAME}/${SWAPVOL[0]}"
 
-   # shellcheck disable=SC2053
    if [[ $(e2label "${CHROOTDEV}1") != ${BOOTLABEL} ]]
    then
       e2label "${CHROOTDEV}1" "${BOOTLABEL}" || \

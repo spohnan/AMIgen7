@@ -6,8 +6,8 @@ if [ -z $VOLUME ]; then
 fi
 
 yum -y install coreutils device-mapper device-mapper-event device-mapper-event-libs device-mapper-libs \
-    device-mapper-persistent-data e2fsprogs gawk git grep grub grub2 grub2-tools grubby libudev lvm2 \
-    lvm2-libs openssl parted sed sysvinit-tools unzip util-linux-ng yum-utils zip
+    device-mapper-persistent-data e2fsprogs gawk git grep grub2 grub2-tools grubby lvm2 lvm2-libs openssl \
+    parted sed sysvinit-tools unzip util-linux-ng yum-utils zip
 
 scripts/DiskSetup.sh -b /boot -v VolGroup00 -d $VOLUME
 scripts/MkChrootTree.sh $VOLUME
