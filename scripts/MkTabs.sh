@@ -43,28 +43,15 @@ _CHROOT=$(echo "${CHROOT}" | sed 's#^/##')
 IFS=$'\n'; MTABLNS=( $(grep "${CHROOT}" /etc/mtab | grep ^/dev | \
                    sed 's#'"${_CHROOT}"'##') )
 
-
 for FSLINE in "${MTABLNS[@]}"
 do
    BLKDEV=$(echo "${FSLINE}" | awk '{print $1}')
    MNTPNT=$(echo "${FSLINE}" | awk '{print $2}' | sed 's#//#/#')
    FSTYPE=$(echo "${FSLINE}" | awk '{print $3}')
-
-   case ${FSTYPE} in
-      ext[234])
-         if [[ ! $(e2label "${BLKDEV}") = "" ]]
-         then
-            BLKDEV="LABEL=$(e2label "${BLKDEV}")"
-         fi
-         ;;
-      xfs)
-         # echo POINK
-         ;;
-   esac
    printf "%s\t%s\t%s\tdefaults\t0 0\n" "${BLKDEV}" "${MNTPNT}" "${FSTYPE}"
 done >> "${FSTAB}"
 printf "%s\t%s\t%s\t%s\t0 0\n" "${TARGSWAP}" swap swap '-' >> "${FSTAB}"
-
+exit
 
 # Read mtab matches into an array
 IFS=$'\n'; MTABLNS=( $(grep "${CHROOT}" /etc/mtab | sed 's#'"${_CHROOT}"'##') )
