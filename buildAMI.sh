@@ -18,3 +18,4 @@ scripts/GrubSetup.sh $VOLUME
 scripts/NetSet.sh
 scripts/CleanChroot.sh
 scripts/PreRelabel.sh
+scripts/OsTweaks.sh

@@ -37,7 +37,6 @@ cat << EOF > "${FSTAB}"
 #
 EOF
 
-# shellcheck disable=SC2001
 _CHROOT=$(echo "${CHROOT}" | sed 's#^/##')
 
 # Read mtab matches into an array

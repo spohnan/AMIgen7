@@ -36,10 +36,10 @@ function LogBrk() {
 # Partition as LVM
 function CarveLVM() {
    local ROOTVOL=(rootVol 100%FREE)
-   local SWAPVOL=(swapVol 2g)
+   local SWAPVOL=(swapVol 1g)
    local HOMEVOL=(homeVol 1g)
    local VARVOL=(varVol 2g)
-   local LOGVOL=(logVol 2g)
+   local LOGVOL=(logVol 1g)
    local AUDVOL=(auditVol 1g)
 
    # Clear the MBR and partition table
