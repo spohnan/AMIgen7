@@ -44,7 +44,7 @@ do
     BLKDEV=$(echo "${FSLINE}" | awk '{print $1}')
     MNTPNT=$(echo "${FSLINE}" | awk '{print $2}' | sed 's#//#/#')
     if [ $MNTPNT == '/boot' ]; then
-        BLKDEV=$(blkid $BLKDEV | awk '{print $3}' | cut -d '"' -f2)
+        BLKDEV=UUID=$(blkid $BLKDEV | awk '{print $3}' | cut -d '"' -f2)
     fi
     FSTYPE=$(echo "${FSLINE}" | awk '{print $3}')
     printf "%s\t%s\t%s\tdefaults\t0 0\n" "${BLKDEV}" "${MNTPNT}" "${FSTYPE}"
