@@ -4,9 +4,13 @@
 SCAP_VERSION=0.1.36
 REPORT_DIR=/opt/openscap-reports
 PROFILE=stig-rhel7-disa
+DATA_STREAM=ssg-centos7-ds.xml
+if [ $(cat /etc/redhat-release | cut -d ' ' -f1 ) == 'Red' ]; then
+    DATA_STREAM=ssg-rhel7-ds.xml
+fi
 
 yum -y update
-yum -y install aide curl dracut-fips dracut-fips-aesni openscap openscap-utils prelink scap-security-guide sssd unzip
+yum -y install aide curl dracut-fips dracut-fips-aesni openscap openscap-utils prelink scap-security-guide unzip
 
 if [ ! -d $REPORT_DIR/tmp ]; then
     mkdir -p $REPORT_DIR/tmp
@@ -20,7 +24,7 @@ oscap xccdf eval --remediate \
     --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa \
     --results scan-xccdf-results.xml \
     --report $(hostname)-scap-report-$(date +%Y%m%d)-before.html \
-    --fetch-remote-resources /opt/openscap-reports/tmp/scap-security-guide-${SCAP_VERSION}/ssg-centos7-ds.xml
+    --fetch-remote-resources /opt/openscap-reports/tmp/scap-security-guide-${SCAP_VERSION}/${DATA_STREAM}
 
 # Configure Notification of Post-AIDE Scan Details
 if grep --silent '.*aide --check$' /etc/crontab; then
@@ -28,25 +32,25 @@ if grep --silent '.*aide --check$' /etc/crontab; then
 fi
 
 # Add nosuid Option to /home
-if grep --silent '/home.*defaults[[:space:]]' /etc/fstab; then
-    sed -i 's/\(.*\/home.*\)defaults/\1defaults,nosuid\t/' /etc/fstab
-fi
+#if grep --silent '/home.*defaults[[:space:]]' /etc/fstab; then
+#    sed -i 's/\(.*\/home.*\)defaults/\1defaults,nosuid\t/' /etc/fstab
+#fi
 
 #TODO
 # Set Password Retry Prompts Permitted Per-Session
-var_password_pam_retry="3"
-if grep -q "retry=" /etc/pam.d/system-auth; then
-	sed -i --follow-symlinks "s/\(retry *= *\).*/\1$var_password_pam_retry/" /etc/pam.d/system-auth
-else
-	sed -i --follow-symlinks "/pam_pwquality.so/ s/$/ retry=$var_password_pam_retry/" /etc/pam.d/system-auth
-fi
+#var_password_pam_retry="3"
+#if grep -q "retry=" /etc/pam.d/system-auth; then
+#	sed -i --follow-symlinks "s/\(retry *= *\).*/\1$var_password_pam_retry/" /etc/pam.d/system-auth
+#else
+#	sed -i --follow-symlinks "/pam_pwquality.so/ s/$/ retry=$var_password_pam_retry/" /etc/pam.d/system-auth
+#fi
 
 #TODO
 # Ensure Home Directories are Created for New Users
-sed -i 's/CREATE_HOME.*/CREATE_HOME\tyes/' /etc/login.defs
+#sed -i 's/CREATE_HOME.*/CREATE_HOME\tyes/' /etc/login.defs
 
 # Set Default firewalld Zone for Incoming Packets
-sed -i 's/DefaultZone.*/DefaultZone=drop/' /etc/firewalld/firewalld.conf
+#sed -i 's/DefaultZone.*/DefaultZone=drop/' /etc/firewalld/firewalld.conf
 
 # Configure Multiple DNS Servers in /etc/resolv.conf
 # In AWS the nameserver is a highly available virtual device, just copy to silence the finding
@@ -56,21 +60,21 @@ sed -i 's/\(nameserver.*\)/&\
 \1/' /etc/resolv.conf
 fi
 
-# Use Only FIPS 140-2 Validated Ciphers
-sed -i 's/Ciphers.*/Ciphers aes128-ctr,aes192-ctr,aes256-ctr/' /etc/ssh/sshd_config
-
-# Use Only FIPS 140-2 Validated MACs
-sed -i 's/MACs.*/MACs hmac-sha2-512,hmac-sha2-256/' /etc/ssh/sshd_config
+## Use Only FIPS 140-2 Validated Ciphers
+#sed -i 's/Ciphers.*/Ciphers aes128-ctr,aes192-ctr,aes256-ctr/' /etc/ssh/sshd_config
+#
+## Use Only FIPS 140-2 Validated MACs
+#sed -i 's/MACs.*/MACs hmac-sha2-512,hmac-sha2-256/' /etc/ssh/sshd_config
 
 # Configure PAM in SSSD Services
-echo -e '[sssd]\nservices = sudo, autofs, pam' > /etc/sssd/sssd.conf
+#echo -e '[sssd]\nservices = sudo, autofs, pam' > /etc/sssd/sssd.conf
 
-# Configure NTP Maxpoll Interval
-if grep --silent ^maxpoll /etc/ntp.conf; then
-    sed -i 's/maxpoll.*/maxpoll 17/' /etc/ntp.conf
-else
-    echo "maxpoll 17" >> /etc/ntp.conf
-fi
+## Configure NTP Maxpoll Interval
+#if grep --silent ^maxpoll /etc/ntp.conf; then
+#    sed -i 's/maxpoll.*/maxpoll 17/' /etc/ntp.conf
+#else
+#    echo "maxpoll 17" >> /etc/ntp.conf
+#fi
 
 # Ensure gpgcheck Enabled for Repository Metadata
 if ! grep --silent '.*repo_gpgcheck' /etc/yum.conf; then
@@ -91,4 +95,4 @@ oscap xccdf eval \
     --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa \
     --results scan-xccdf-results.xml \
     --report $(hostname)-scap-report-$(date +%Y%m%d)-after2.html \
-    --fetch-remote-resources --fetch-remote-resources /opt/openscap-reports/tmp/scap-security-guide-${SCAP_VERSION}/ssg-centos7-ds.xml
+    --fetch-remote-resources --fetch-remote-resources /opt/openscap-reports/tmp/scap-security-guide-${SCAP_VERSION}/${DATA_STREAM}
