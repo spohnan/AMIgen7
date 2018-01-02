@@ -38,9 +38,10 @@ function CarveLVM() {
    local ROOTVOL=(rootVol 100%FREE)
    local SWAPVOL=(swapVol 1g)
    local HOMEVOL=(homeVol 512m)
-   #local VARVOL=(varVol 2g)
+   local VARVOL=(varVol 2g)
    local LOGVOL=(logVol 1g)
    local AUDVOL=(auditVol 512m)
+   local TMPVOL=(auditVol 512m)
 
    # Clear the MBR and partition table
    dd if=/dev/zero of="${CHROOTDEV}" bs=512 count=1000 > /dev/null 2>&1
@@ -56,9 +57,10 @@ function CarveLVM() {
    vgcreate -y "${VGNAME}" "${CHROOTDEV}2" || LogBrk 5 "VG creation failed. Aborting!"
    lvcreate --yes -W y -L "${SWAPVOL[1]}" -n "${SWAPVOL[0]}" "${VGNAME}" || LVCSTAT=1
    lvcreate --yes -W y -L "${HOMEVOL[1]}" -n "${HOMEVOL[0]}" "${VGNAME}" || LVCSTAT=1
-   #lvcreate --yes -W y -L "${VARVOL[1]}" -n "${VARVOL[0]}" "${VGNAME}" || LVCSTAT=1
+   lvcreate --yes -W y -L "${VARVOL[1]}" -n "${VARVOL[0]}" "${VGNAME}" || LVCSTAT=1
    lvcreate --yes -W y -L "${LOGVOL[1]}" -n "${LOGVOL[0]}" "${VGNAME}" || LVCSTAT=1
    lvcreate --yes -W y -L "${AUDVOL[1]}" -n "${AUDVOL[0]}" "${VGNAME}" || LVCSTAT=1
+   lvcreate --yes -W y -L "${TMPVOL[1]}" -n "${TMPVOL[0]}" "${VGNAME}" || LVCSTAT=1
    lvcreate --yes -W y -l "${ROOTVOL[1]}" -n "${ROOTVOL[0]}" "${VGNAME}" || LVCSTAT=1
 
    if [[ ${LVCSTAT} = 1 ]]
@@ -83,7 +85,7 @@ function CarveLVM() {
    mkfs -t xfs -L "${BOOTLABEL}" "${CHROOTDEV}1" || err_exit "Failure creating filesystem - /boot"
    mkfs -t xfs "/dev/${VGNAME}/${ROOTVOL[0]}" || err_exit "Failure creating filesystem - /"
    mkfs -t xfs "/dev/${VGNAME}/${HOMEVOL[0]}" || err_exit "Failure creating filesystem - /home"
-   #mkfs -t xfs "/dev/${VGNAME}/${VARVOL[0]}" || err_exit "Failure creating filesystem - /var"
+   mkfs -t xfs "/dev/${VGNAME}/${VARVOL[0]}" || err_exit "Failure creating filesystem - /var"
    mkfs -t xfs "/dev/${VGNAME}/${LOGVOL[0]}" || err_exit "Failure creating filesystem - /var/log"
    mkfs -t xfs "/dev/${VGNAME}/${AUDVOL[0]}" || err_exit "Failure creating filesystem - /var/log/audit"
    mkfs -t xfs "/dev/${VGNAME}/${TMPVOL[0]}" || err_exit "Failure creating filesystem - /tmp"
