@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 # ami-02e98f78
 
+SCAP_VERSION=0.1.36
 REPORT_DIR=/opt/openscap-reports
 PROFILE=stig-rhel7-disa
 
 yum -y update
-yum -y install aide dracut-fips dracut-fips-aesni openscap openscap-utils prelink scap-security-guide sssd
+yum -y install aide curl dracut-fips dracut-fips-aesni openscap openscap-utils prelink scap-security-guide sssd unzip
 
-if [ ! -d $REPORT_DIR ]; then
-    mkdir -p $REPORT_DIR
+if [ ! -d $REPORT_DIR/tmp ]; then
+    mkdir -p $REPORT_DIR/tmp
+    cd $REPORT_DIR/tmp
+    curl -OL https://github.com/OpenSCAP/scap-security-guide/releases/download/v${SCAP_VERSION}/scap-security-guide-${SCAP_VERSION}.zip
+    unzip *.zip
 fi
-cd $REPORT_DIR/tmp
+cd $REPORT_DIR
 
 oscap xccdf eval --remediate \
     --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa \
     --results scan-xccdf-results.xml \
     --report $(hostname)-scap-report-$(date +%Y%m%d)-before.html \
-    --fetch-remote-resources /usr/share/xml/scap/ssg/content/ssg-centos7-ds.xml
+    --fetch-remote-resources /opt/openscap-reports/tmp/scap-security-guide-${SCAP_VERSION}/ssg-centos7-ds.xml
 
 # Configure Notification of Post-AIDE Scan Details
 if grep --silent '.*aide --check$' /etc/crontab; then
@@ -68,30 +72,23 @@ else
     echo "maxpoll 17" >> /etc/ntp.conf
 fi
 
-# ClamAV
-yum -y install epel-release
-yum -y install clamav clamav-scanner-systemd clamav-update
-sed -i 's/^Example/#Example/g' /etc/freshclam.conf
-freshclam
-echo -e '#!/bin/sh\nfreshclam\n' > /etc/cron.daily/freshclam
-chmod 755 /etc/cron.daily/freshclam
-ln -s /etc/clamd.d/scan.conf /etc/clamd.conf
-sed -i 's/^Example/#Example/g' /etc/clamd.d/scan.conf
-sed -i 's/^#LocalSocket /LocalSocket /g' /etc/clamd.d/scan.conf
-sed -i 's/^#LogFile /LogFile /g' /etc/clamd.d/scan.conf
-touch /var/log/clamd.scan
-chown clamscan:clamscan /var/log/clamd.scan
-setsebool -P antivirus_can_scan_system 1
-setsebool -P clamd_use_jit 1
-cat /etc/fstab | grep nfs | awk '{printf "%s%s\n", "ExcludePath ^", $2}' >> /etc/clamd.d/scan.conf
-echo "ExcludePath ^/proc" >> /etc/clamd.d/scan.conf
-echo "ExcludePath ^/sys" >> /etc/clamd.d/scan.conf
-echo "VirusEvent aws sns publish --topic-arn shared-services-ErrorTopic-QT3ZJ7CLXCKS --region us-east-1 --subject \"VIRUS ALERT: %v\" --message \"VIRUS ALERT: %v\"" >> /etc/clamd.d/scan.conf
-systemctl start clamd@scan
-systemctl enable clamd@scan
+# Ensure gpgcheck Enabled for Repository Metadata
+if ! grep --silent '.*repo_gpgcheck' /etc/yum.conf; then
+    echo "repo_gpgcheck=1" >> /etc/yum.conf
+else
+    sed -i 's/repo_gpgcheck.*/repo_gpgcheck=1/' /etc/yum.conf
+fi
+
+# Configure auditd space_left Action on Low Disk Space
+var_auditd_space_left_action="email"
+grep -q ^space_left_action /etc/audit/auditd.conf && \
+  sed -i "s/space_left_action.*/space_left_action = $var_auditd_space_left_action/g" /etc/audit/auditd.conf
+if ! [ $? -eq 0 ]; then
+    echo "space_left_action = $var_auditd_space_left_action" >> /etc/audit/auditd.conf
+fi
 
 oscap xccdf eval \
     --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa \
     --results scan-xccdf-results.xml \
     --report $(hostname)-scap-report-$(date +%Y%m%d)-after2.html \
-    --fetch-remote-resources /usr/share/xml/scap/ssg/content/ssg-centos7-ds.xml --oval-results
+    --fetch-remote-resources --fetch-remote-resources /opt/openscap-reports/tmp/scap-security-guide-${SCAP_VERSION}/ssg-centos7-ds.xml
