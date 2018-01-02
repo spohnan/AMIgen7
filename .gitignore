@@ -1,2 +1,3 @@
 yum-chroot.conf
 *.rpm
+venv
